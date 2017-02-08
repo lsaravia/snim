@@ -21,7 +21,6 @@ int main(int argc, char* argv[]){
   
 SnimModel mdl(3);
 
-SnimModel mdl4(3);
 cout << mdl;
 
 mdl.SetOmega( {0.0, 0.0, 0.0, 0.0,
@@ -33,8 +32,13 @@ mdl.SetInmigration({0.1,0.1,0.1});
 mdl.SetTotalSize(10000);
 mdl.SetInitialN({1000,1000,1000});        
 
-mdl4=mdl;
+cout << mdl;
 
+SimulationParameters sp = {1234,100,0.01};
+
+matrix <size_t> out(3,100);
+
+mdl.SimulTauLeap(sp,out);
 
   // Read model parameter file 
   // Reaf simulations parameter file 

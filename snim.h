@@ -20,7 +20,7 @@ namespace snim {
 struct SimulationParameters {
     size_t rndSeed=0;               // Seed of the random generator
     size_t nEvals=0;                // number of evaluations steps
-    size_t tau=0;                   // Tau method steps  
+    float tau=0;                   // Tau method steps  
     size_t nSteps = nEvals*tau;     // total number of steps
 
 };
@@ -87,42 +87,54 @@ public:
   \brief Set Initial value of species' populations  
   */
   void SetInitialN(std::initializer_list<float> const& om ){
-      
-    assert(nIni.size()==om.size());
-    nIni = om;    
+    using namespace std;
+    assert((nIni.size()-1)==om.size());
+    copy(begin(om),end(om),begin(nIni)+1);
   };
   
-  void SetTotalSize( float & t) { totSize=t;}
+  void SetTotalSize( const float & t) { totSize=t;}
   
   std::string ReadSimulParams(const char *filename);
   std::string ReadModelParams(const char *filename);
 
+  void SimulTauLeap(const SimulationParameters & sp, matrix<size_t> & N );
   
   friend std::ostream& operator<<(std::ostream& os,  const SnimModel& s);
 };
 
+template<typename T>
+std::ostream &operator <<(std::ostream &os, const std::vector<T> &v) {
+    
+    os << "[" << v[0];
+    for (auto r=1u; r<v.size(); ++r)
+    {
+        os << ", " << v[r];
+    }
+    os << "]\n";
+
+   return os;
+}
+
 std::ostream& operator<<(std::ostream& os, const SnimModel& s) {
   os << "[Omega]\n" << s.omega << std::endl;
   
-  os << "[Extinction]\n[";
-  for (const auto& i: s.e)
-    os << i << ", ";
-  os << "]\n"<< std::endl;
+  os << "[Extinction]\n";
+  os << s.e << std::endl;
   
-  os << "[Inmigration]\n[";
-  for (const auto& i: s.u)
-    os << i << ", ";
-  os << "]\n"<< std::endl;
+  os << "[Immigration]\n";
+  os << s.u << std::endl;
 
-  os << "[Initial population]\n[";
-  for (const auto& i: s.nIni)
-    os << i << ", ";
-  os << "]\n"<< std::endl;
+  os << "[Initial population]\n";
+  os << s.nIni << std::endl;
   
-  os << "[Total population]\n[";
+  os << "[Total Size]\n[";
   os << s.totSize << "]\n";
   
   return os;
+};
+
+void SnimModel::SimulTauLeap(const SimulationParameters& sp, matrix<size_t>& N){
+    
 };
 
 std::string SnimModel::ReadSimulParams(const char *filename) {
