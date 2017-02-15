@@ -25,18 +25,18 @@ cout << mdl;
 
 mdl.SetOmega( {0.0, 0.0, 0.0, 0.0,
                0.0, 0.0, 0.2, 0.3,
-               0.1, 1.0, 0.0, 0.3,
-               0.1, 1.0, 0.2, 0.0} );
+               0.1, 0.0, 0.0, 0.3,
+               0.1, 0.0, 0.2, 0.0} );
 mdl.SetExtinction({0.1,0.1,0.1});
 mdl.SetInmigration({0.1,0.1,0.1});
-mdl.SetTotalSize(10000);
-mdl.SetInitialN({1000,1000,1000});        
+mdl.SetCommunitySize(10000);
+mdl.SetInitialN({1001,1002,1003});        
 
 cout << mdl;
 
 SimulationParameters sp = {1234,100,0.01};
 
-matrix <size_t> out(3,100);
+matrix <size_t> out(4,100);
 
 mdl.SimulTauLeap(sp,out);
 

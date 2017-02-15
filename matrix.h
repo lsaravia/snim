@@ -232,6 +232,26 @@ class matrix {
   }
 
   /**
+    \brief Sum a row of the matrix.
+   */
+  auto row_sum(size_t row) const -> T {
+    T s=0;
+    for (auto i = 0u; i < m_cols; ++i)
+       s += m_elems[i * m_rows + row];
+    return s;
+  }
+
+  /**
+    \brief Sum of a column.
+   */
+  auto col_sum(size_t col) const -> T {
+    T s=0;
+    for (auto i = 0u; i < m_rows; ++i)
+      s += m_elems[col * m_rows + i];
+    return s;
+  }
+  
+  /**
     \brief Get element using the index of the flat column-major internal array.
    */
   auto operator[](size_t idx) const -> T& {
@@ -300,7 +320,7 @@ template<typename T>
 auto operator<<(std::ostream& os, matrix<T> const& m) -> std::ostream& {
   for (auto r = 0u; r < m.m_rows; ++r) {
     os << '[' << m(r, 0);
-    for (auto c = 1u; c < m.m_cols - 1; ++c) {
+    for (auto c = 1u; c < m.m_cols; ++c) {
       os << ", " << m(r, c);
     }
     os << "]\n";

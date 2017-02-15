@@ -12,7 +12,10 @@
 #include <initializer_list>
 #include <fstream>
 #include <string>
+#include <sstream>
 #include <cerrno>
+#include <utility>
+
 #include "matrix.h"
 
 namespace snim {
@@ -20,8 +23,8 @@ namespace snim {
 struct SimulationParameters {
     size_t rndSeed=0;               // Seed of the random generator
     size_t nEvals=0;                // number of evaluations steps
-    float tau=0;                   // Tau method steps  
-    size_t nSteps = nEvals*tau;     // total number of steps
+    double tau=0;                   // Tau method steps  
+    // size_t nSteps = nEvals*tau;     // total number of steps
 
 };
 
@@ -34,7 +37,7 @@ class SnimModel {
     std::vector<float> e;       // extinction vector
     std::vector<float> u;       // inmigration parameter 
     std::vector<float> nIni;       // Initial Population values
-    size_t totSize=0;           // Total size of the community
+    size_t communitySize=0;           // Total size of the community
 
     // Simulation Parameters 
     SimulationParameters simPar;
@@ -59,12 +62,28 @@ public:
   }
   
   /**
-  \brief Set Interaction matrix in colum-wise order
+  \brief Set Interaction matrix in row-wise order
   */
   void SetOmega( std::initializer_list<float> const& om) {
 //      matrix<float> temp(omega.rows(),omega.cols(),om);  
 //      omega = temp;
-      omega = om;
+      if (om.size() != omega.size()) {
+            std::ostringstream message;
+            message << "Different no. of elements: "
+                    << "expected " << omega.size() << ", "
+                    << "got " << om.size() << ".";
+
+            throw std::invalid_argument(message.str());
+        }
+
+   
+      // Standard assign omega = om is column-wise so I have to do it manually
+      // in row-wise order
+      //
+      auto it=begin(om); 
+      for (auto i = 0; i<omega.rows(); ++i)
+        for (auto j = 0; j<omega.cols(); j++)
+            omega(i,j) = *it++;
   };
   
   /**
@@ -92,14 +111,20 @@ public:
     copy(begin(om),end(om),begin(nIni)+1);
   };
   
-  void SetTotalSize( const float & t) { totSize=t;}
+  /**
+  \brief Set the size of the community species populations i.e. the maximun value of the sum of species pop  
+  */
+  void SetCommunitySize( const float & t) { communitySize=t;}
   
   std::string ReadSimulParams(const char *filename);
   std::string ReadModelParams(const char *filename);
 
+  /**
+  \brief Simulate the model using the Tau-leap method   
+  */
   void SimulTauLeap(const SimulationParameters & sp, matrix<size_t> & N );
   
-  friend std::ostream& operator<<(std::ostream& os,  const SnimModel& s);
+  friend std::ostream& operator<<(std::ostream&,  const SnimModel&);
 };
 
 template<typename T>
@@ -114,58 +139,6 @@ std::ostream &operator <<(std::ostream &os, const std::vector<T> &v) {
 
    return os;
 }
-
-std::ostream& operator<<(std::ostream& os, const SnimModel& s) {
-  os << "[Omega]\n" << s.omega << std::endl;
-  
-  os << "[Extinction]\n";
-  os << s.e << std::endl;
-  
-  os << "[Immigration]\n";
-  os << s.u << std::endl;
-
-  os << "[Initial population]\n";
-  os << s.nIni << std::endl;
-  
-  os << "[Total Size]\n[";
-  os << s.totSize << "]\n";
-  
-  return os;
-};
-
-void SnimModel::SimulTauLeap(const SimulationParameters& sp, matrix<size_t>& N){
-    
-};
-
-std::string SnimModel::ReadSimulParams(const char *filename) {
-  std::ifstream in(filename, std::ios::in | std::ios::binary);
-  if (in)
-  {
-    std::string contents;
-    in.seekg(0, std::ios::end);
-    contents.resize(in.tellg());
-    in.seekg(0, std::ios::beg);
-    in.read(&contents[0], contents.size());
-    in.close();
-    return(contents);
-  }
-  throw(errno);
-};
-
-std::string SnimModel::ReadModelParams(const char *filename) {
-  std::ifstream in(filename, std::ios::in | std::ios::binary);
-  if (in)
-  {
-    std::string contents;
-    in.seekg(0, std::ios::end);
-    contents.resize(in.tellg());
-    in.seekg(0, std::ios::beg);
-    in.read(&contents[0], contents.size());
-    in.close();
-    return(contents);
-  }
-  throw(errno);
-};
 
 
 } /* end namespace */
