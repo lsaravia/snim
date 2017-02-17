@@ -1,2 +1,4 @@
 /build/
 /dist/
+/test/gtest/build/
+/test/gtest/dist/

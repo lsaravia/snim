@@ -1,3 +1,20 @@
+/*
+ * Copyright 2017 Leonardo A. Saravia <lsaravia@ungs.edu.ar>.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
 /**
   \file   snim.h
   \brief  Stochastic network interaction model class definition
@@ -37,7 +54,7 @@ class SnimModel {
     std::vector<float> e;       // extinction vector
     std::vector<float> u;       // inmigration parameter 
     std::vector<float> nIni;       // Initial Population values
-    size_t communitySize=0;           // Total size of the community
+    const size_t communitySize=0;           // Total size of the community
 
     // Simulation Parameters 
     SimulationParameters simPar;
@@ -45,9 +62,9 @@ class SnimModel {
     
 public:
 
-  SnimModel(size_t nsp) : omega(nsp+1,nsp+1), e(nsp),u(nsp), nIni(nsp+1) {}
+  SnimModel(size_t nsp, size_t comSize) : omega(nsp+1,nsp+1), e(nsp),u(nsp), nIni(nsp+1), communitySize(comSize) {}
   
-  SnimModel(const SnimModel& s) : omega(s.omega), e(s.e),u(s.u), nIni(s.nIni), simPar(s.simPar) {}
+  SnimModel(const SnimModel& s) : omega(s.omega), e(s.e),u(s.u), nIni(s.nIni), simPar(s.simPar), communitySize(s.communitySize) {}
 
   SnimModel& operator=(const SnimModel& s){
     if(this == &s )
@@ -111,11 +128,7 @@ public:
     copy(begin(om),end(om),begin(nIni)+1);
   };
   
-  /**
-  \brief Set the size of the community species populations i.e. the maximun value of the sum of species pop  
-  */
-  void SetCommunitySize( const float & t) { communitySize=t;}
-  
+ 
   std::string ReadSimulParams(const char *filename);
   std::string ReadModelParams(const char *filename);
 

@@ -20,9 +20,39 @@ namespace snim{
 
 void SnimModel::SimulTauLeap(const SimulationParameters& sp, matrix<size_t>& N){
     using namespace std;
+    // if output matrix undefined define it with the correct dimensions
+    // 
+    if (N.rows()==0){
+        
+        N.resize(omega.rows(),sp.nEvals);
+    }
+
+    if (omega.rows() != N.rows()) {
+      std::ostringstream message;
+      message << "Different no. species : "
+              << "Expected " << omega.rows() << ", "
+              << "got " << N.rows() << endl;
+
+      throw std::invalid_argument(message.str());
+    }
     
-    // Check matrix size number of species must be the same 
-    assert( omega.rows() == N.rows());
+    if (omega.rows() != N.rows()) {
+      std::ostringstream message;
+      message << "Different no. species : "
+              << "Expected " << omega.rows() << ", "
+              << "got " << N.rows() << endl;
+
+      throw std::invalid_argument(message.str());
+    }
+
+    if (sp.nEvals != N.cols()) {
+      std::ostringstream message;
+      message << "Different time dimension of output matrix : "
+              << "Expected " << sp.nEvals << ", "
+              << "got " << N.cols() << endl;
+
+      throw std::invalid_argument(message.str());
+    }
     
     // Initialize output matrix with initial populations
     //
@@ -61,11 +91,19 @@ void SnimModel::SimulTauLeap(const SimulationParameters& sp, matrix<size_t>& N){
     // Vectors for extinction and immigration 
     //
    
-             
-    // Calculate the transitions with poison random numbers
+
+    // Simulate the model - Calculate the transitions with poison random numbers
     //
-    for (auto y = 0; y < sp.nEvals ; ++y){
+    for (auto y = 0; y < (sp.nEvals-1) ; ++y){
+
+        // Initialize the internal matrix with N
+        matrix <size_t> S(nSpecies,1);
+        for(auto i=0u; i<S.rows(); ++i)
+            S(i)=N(i,y);
+        
         for(auto n=0; n < nSteps; ++n) {
+            
+            cout << endl << "Inner Steps: " << n << endl;    
             
             // Calculate interactions between species 
             //
@@ -73,8 +111,8 @@ void SnimModel::SimulTauLeap(const SimulationParameters& sp, matrix<size_t>& N){
             for(auto t:actualInteractions){
                 auto s=t.first;
                 auto r=t.second;
-                cout << s << " - " << r << " - " << omega(s,r) << " - " << omega(r,s) << " - " << N(s,n) << " - " ;
-                double evRate =(omega(s,r)-omega(r,s))*N(s,n); //  
+                cout << s << " - " << r << " - " << omega(s,r) << " - " << omega(r,s) << " - " << S(s) << " - " ;
+                double evRate =(omega(s,r)-omega(r,s))*S(s)*S(r)/communitySize; //  
                 auto pois = std::poisson_distribution<size_t>(evRate*sp.tau);
                 intDelta(s,r) = pois(rng);
                 cout <<  evRate << " - "<< intDelta(s,r) << endl;
@@ -82,51 +120,50 @@ void SnimModel::SimulTauLeap(const SimulationParameters& sp, matrix<size_t>& N){
             }
             cout << intDelta << endl;
             
-            matrix<size_t>actN(nSpecies,1);
-            actN.data() = N.col_cpy(n);
-            
+            // Calculate inmigration extinction and sum interactions
+            //            
             for(auto s=1; s<nSpecies; ++s){
                 
                 // Calculate extinction
                 double evRate = 0;
-                evRate = actN(s)*e[s-1];
-                auto pois = std::poisson_distribution<size_t>(evRate*sp.tau);
-                auto exDelta= pois(rng);
+                evRate = S(s)*e[s-1];
+                size_t exDelta = 0;
+                if(evRate > 0) {
+                    auto pois = std::poisson_distribution<size_t>(evRate*sp.tau);
+                    exDelta= pois(rng);
+                }
                 
                 // Calculate immigration 
-                evRate = N(0,n)*u[s-1];
-                auto imPois = std::poisson_distribution<size_t>(evRate*sp.tau);
-                auto imDelta= pois(rng);
-                
+                evRate = S(0)*u[s-1];
+                size_t imDelta=0;
+                if( evRate > 0) {
+                    auto pois = std::poisson_distribution<size_t>(evRate*sp.tau);
+                    imDelta= pois(rng);
+                }
                 // Calculate new population values
-                auto totDelta = imDelta - exDelta + intDelta.row_sum(s) - intDelta.col_sum(s);
-                if( actN(s)+totDelta >0)
-                    actN(s) += totDelta;
+                long long int totDelta = imDelta - exDelta + intDelta.row_sum(s) - intDelta.col_sum(s);
+                if( S(s)+totDelta >0)
+                    S(s) += totDelta;
                 else
-                    actN(s) =0;
+                    S(s) =0;
                 
-                if( actN(0) - totDelta <0)
-                    actN(0) = 0;
+                if( S(0) - totDelta <0)
+                    S(0) = 0;
                 else 
-                    actN(0) -= totDelta;
+                    S(0) -= totDelta;
                         
                 cout << s << " - " << imDelta << " - " << exDelta << " - " << intDelta.row_sum(s) << " - " << intDelta.col_sum(s) << " - " 
-                                << N(s,n) << " - " <<  actN(s) << " - " << actN(0) << endl;
+                                << totDelta << " - " <<  S(s) << " - " << S(0) << endl;
             
-//                for(auto r=0; r<nSpecies; ++r){
-//
-//                    evDelta(s,r) = pois(rng);
-//                    
-//                    nDelta(s) += evDelta(s,r);
-//                }
-//                for(auto r:nSpecies){
-//                    nDelta(s) -= evDelta(r,s);
-//                }
                 
             }
-
         }
 
+        cout << "Outer Step: " << y+1 << endl; 
+        for(auto i=0u; i<S.rows(); ++i){
+            N(i,y+1)=S(i);
+            cout << N(i,y+1) << endl;    
+        }
     }
             
 }

@@ -19,27 +19,27 @@ int main(int argc, char* argv[]){
 //	    return 1;
 //	}
   
-SnimModel mdl(3);
+SnimModel mdl(3,10000);
 
 cout << mdl;
 
 mdl.SetOmega( {0.0, 0.0, 0.0, 0.0,
-               0.0, 0.0, 0.2, 0.3,
+               0.0, 0.0, 1.0, 1.0,
                0.1, 0.0, 0.0, 0.3,
                0.1, 0.0, 0.2, 0.0} );
-mdl.SetExtinction({0.1,0.1,0.1});
-mdl.SetInmigration({0.1,0.1,0.1});
-mdl.SetCommunitySize(10000);
-mdl.SetInitialN({1001,1002,1003});        
+mdl.SetExtinction({0.5,0.2,0.2});
+mdl.SetInmigration({0.0,0.0,0.0});
+mdl.SetInitialN({1000,2,3});        
 
 cout << mdl;
 
 SimulationParameters sp = {1234,100,0.01};
 
-matrix <size_t> out(4,100);
+matrix <size_t> out;
 
 mdl.SimulTauLeap(sp,out);
 
+cout << out << endl;
   // Read model parameter file 
   // Reaf simulations parameter file 
 

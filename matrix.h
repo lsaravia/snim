@@ -22,8 +22,12 @@ class matrix {
   T* m_elems;
   size_t m_rows;
   size_t m_cols;
+  
+  void check(size_t r, size_t c) const { assert(r < m_rows && c <= m_cols); };
+
 
  public:
+  matrix() : m_elems(nullptr), m_rows(0),m_cols(0) {}
   /**
     \brief Allocated memory for a 'rows' by 'cols' matrix.
    */
@@ -119,6 +123,16 @@ class matrix {
     return *this;
   }
 
+  void resize(size_t rows, size_t cols) {
+    m_rows = rows;
+    m_cols = cols;
+    if (m_elems)
+      std::free(m_elems);
+    size_t const bytes = m_rows * m_cols * sizeof(T);
+    m_elems = (T*)std::malloc(bytes);
+  
+  }
+
   /**
     \brief Returns a pointer to the raw data.
    */
@@ -201,6 +215,7 @@ class matrix {
            contain all the elements of the column).
    */
   auto col_cpy(size_t col, T* c) const -> void {
+    assert(col < m_cols);
     std::memcpy(c, m_elems + col * m_rows, m_rows * sizeof(T));
   }
 
@@ -208,6 +223,7 @@ class matrix {
     \brief Creates a copy of a column.
    */
   auto col_cpy(size_t col) const -> T* {
+    assert(col < m_cols);
     auto c = (T*)std::malloc(m_rows * sizeof(T));
     col_cpy(col, c);
     return c;
@@ -218,6 +234,7 @@ class matrix {
            contain all the elements of the row).
    */
   auto row_cpy(size_t row, T* r) const -> void {
+    assert(row < m_rows);
     for (auto i = 0u; i < m_cols; ++i)
       r[i] = m_elems[i * m_rows + row];
   }
@@ -226,6 +243,7 @@ class matrix {
     \brief Creates a copy of a row (more expansive than copying columns).
    */
   auto row_cpy(size_t row) const -> T* {
+    assert(row < m_rows);
     auto r = (T*)std::malloc(m_cols * sizeof(T));
     row_cpy(row, r);
     return r;
@@ -235,6 +253,7 @@ class matrix {
     \brief Sum a row of the matrix.
    */
   auto row_sum(size_t row) const -> T {
+    assert(row < m_rows);
     T s=0;
     for (auto i = 0u; i < m_cols; ++i)
        s += m_elems[i * m_rows + row];
@@ -245,6 +264,8 @@ class matrix {
     \brief Sum of a column.
    */
   auto col_sum(size_t col) const -> T {
+    assert(col < m_cols);
+
     T s=0;
     for (auto i = 0u; i < m_rows; ++i)
       s += m_elems[col * m_rows + i];
@@ -255,6 +276,7 @@ class matrix {
     \brief Get element using the index of the flat column-major internal array.
    */
   auto operator[](size_t idx) const -> T& {
+    assert(idx < m_rows*m_cols);
     return m_elems[idx];
   }
 
@@ -262,6 +284,7 @@ class matrix {
     \brief Get element using the index of the flat column-major internal array.
    */
   auto operator()(size_t idx) const -> T& {
+    assert(idx < m_rows*m_cols);
     return m_elems[idx];
   }
 
@@ -269,6 +292,7 @@ class matrix {
     \brief Get element at a given row/col.
    */
   auto operator()(size_t row, size_t col) const -> T& {
+    check(row,col);
     return m_elems[row + col * m_rows];
   }
 
@@ -283,8 +307,19 @@ class matrix {
 
   template<typename T_>
   friend auto operator<<(std::ostream&, matrix<T_> const&) -> std::ostream&;
+  
+  template<typename T_>
+  friend void col_cpy(size_t col, matrix<T_> const&, matrix<T_> & );
+
 };
 
+template<typename T>
+void col_cpy( size_t col, matrix<T> const& D, matrix<T> & A ) {
+    if(A.cols()>1)
+       A(D.m_rows,1);
+    D.col_cpy(col,A.m_elems);
+            
+}
 
 template<typename T>
 auto operator<(matrix<T> const& lhs, matrix<T> const& rhs) -> bool {
