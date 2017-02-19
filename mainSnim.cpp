@@ -18,25 +18,39 @@ int main(int argc, char* argv[]){
 //	    show_usage(argv[0]);
 //	    return 1;
 //	}
-  
-SnimModel mdl(3,10000);
 
-cout << mdl;
+
+std::cout << "3 species 1 Predator 2 prey" << std::endl;
+std::cout << "Initial densities [0,0,0]" << std::endl;
+SnimModel mdl(3,10000);
 
 mdl.SetOmega( {0.0, 0.0, 0.0, 0.0,
                0.0, 0.0, 1.0, 1.0,
-               0.1, 0.0, 0.0, 0.3,
-               0.1, 0.0, 0.2, 0.0} );
-mdl.SetExtinction({0.5,0.2,0.2});
+               1.0, 0.0, 0.0, 0.3,
+               1.0, 0.0, 0.2, 0.0} );
+mdl.SetExtinction({0.5,0.5,0.5});
 mdl.SetInmigration({0.0,0.0,0.0});
-mdl.SetInitialN({1000,2,3});        
+mdl.SetInitialN({0,0,0});        
+SimulationParameters sp = {1234,1,0.01};
+matrix <size_t> out;
+mdl.SimulTauLeap(sp,out);
+
+cout << mdl;
+cout << out << endl;
+
+
+
+mdl.SetOmega( {0.0, 0.0, 0.0, 0.0,
+               0.0, 0.0, 2.0, 0.0,
+               4.0, 0.0, 0.0, 0.0,
+               1.7, 0.0, 0.0, 0.0} );
+mdl.SetExtinction({0.0,0,0.0});
+mdl.SetInmigration({0.0,0.0,0.0});
+mdl.SetInitialN({2000,4000,4000});        
 
 cout << mdl;
 
-SimulationParameters sp = {1234,100,0.01};
-
-matrix <size_t> out;
-
+sp = {1234,100,0.01};
 mdl.SimulTauLeap(sp,out);
 
 cout << out << endl;

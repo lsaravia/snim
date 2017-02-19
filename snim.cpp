@@ -22,37 +22,19 @@ void SnimModel::SimulTauLeap(const SimulationParameters& sp, matrix<size_t>& N){
     using namespace std;
     // if output matrix undefined define it with the correct dimensions
     // 
-    if (N.rows()==0){
+    if (omega.rows() != N.rows() || (sp.nEvals+1) != N.cols()){
         
-        N.resize(omega.rows(),sp.nEvals);
+        N.resize(omega.rows(),sp.nEvals+1);
     }
 
-    if (omega.rows() != N.rows()) {
-      std::ostringstream message;
-      message << "Different no. species : "
-              << "Expected " << omega.rows() << ", "
-              << "got " << N.rows() << endl;
-
-      throw std::invalid_argument(message.str());
-    }
-    
-    if (omega.rows() != N.rows()) {
-      std::ostringstream message;
-      message << "Different no. species : "
-              << "Expected " << omega.rows() << ", "
-              << "got " << N.rows() << endl;
-
-      throw std::invalid_argument(message.str());
-    }
-
-    if (sp.nEvals != N.cols()) {
-      std::ostringstream message;
-      message << "Different time dimension of output matrix : "
-              << "Expected " << sp.nEvals << ", "
-              << "got " << N.cols() << endl;
-
-      throw std::invalid_argument(message.str());
-    }
+//    if (() {
+//      std::ostringstream message;
+//      message << "Different time dimension of output matrix : "
+//              << "Expected " << sp.nEvals << ", "
+//              << "got " << N.cols() << endl;
+//
+//      throw std::invalid_argument(message.str());
+//    }
     
     // Initialize output matrix with initial populations
     //
@@ -60,9 +42,7 @@ void SnimModel::SimulTauLeap(const SimulationParameters& sp, matrix<size_t>& N){
     for( size_t i=1; i<N.rows(); ++i){
         N(i,0)= nIni[i];
         N(0,0)-=nIni[i];
-//        cout << i << " - " << N(i,0) <<endl;
     }
-//    cout << 0 << " - " << N(0,0) <<endl;
     
     // Setup random number generator with random seed
     // 
@@ -94,7 +74,7 @@ void SnimModel::SimulTauLeap(const SimulationParameters& sp, matrix<size_t>& N){
 
     // Simulate the model - Calculate the transitions with poison random numbers
     //
-    for (auto y = 0; y < (sp.nEvals-1) ; ++y){
+    for (auto y = 0; y < (sp.nEvals) ; ++y){
 
         // Initialize the internal matrix with N
         matrix <size_t> S(nSpecies,1);
@@ -103,7 +83,7 @@ void SnimModel::SimulTauLeap(const SimulationParameters& sp, matrix<size_t>& N){
         
         for(auto n=0; n < nSteps; ++n) {
             
-            cout << endl << "Inner Steps: " << n << endl;    
+//            cout << endl << "Inner Steps: " << n << endl;    
             
             // Calculate interactions between species 
             //
@@ -111,14 +91,19 @@ void SnimModel::SimulTauLeap(const SimulationParameters& sp, matrix<size_t>& N){
             for(auto t:actualInteractions){
                 auto s=t.first;
                 auto r=t.second;
-                cout << s << " - " << r << " - " << omega(s,r) << " - " << omega(r,s) << " - " << S(s) << " - " ;
-                double evRate =(omega(s,r)-omega(r,s))*S(s)*S(r)/communitySize; //  
-                auto pois = std::poisson_distribution<size_t>(evRate*sp.tau);
-                intDelta(s,r) = pois(rng);
-                cout <<  evRate << " - "<< intDelta(s,r) << endl;
+                double evRate =(omega(s,r)-omega(r,s))*S(s)*S(r)/communitySize; 
+                if( evRate>0 ){  
+                    auto pois = std::poisson_distribution<size_t>(evRate*sp.tau);
+                    intDelta(s,r) = pois(rng);
+                }
+                else
+                    intDelta(s,r) = 0.0;
+                    
+//                cout << s << " - " << r << " - " << omega(s,r) << " - " << omega(r,s) << " - " << S(s) << " - " ;
+//                cout <<  evRate << " - "<< intDelta(s,r) << endl;
                 
             }
-            cout << intDelta << endl;
+//            cout << intDelta << endl;
             
             // Calculate inmigration extinction and sum interactions
             //            
@@ -152,17 +137,17 @@ void SnimModel::SimulTauLeap(const SimulationParameters& sp, matrix<size_t>& N){
                 else 
                     S(0) -= totDelta;
                         
-                cout << s << " - " << imDelta << " - " << exDelta << " - " << intDelta.row_sum(s) << " - " << intDelta.col_sum(s) << " - " 
-                                << totDelta << " - " <<  S(s) << " - " << S(0) << endl;
+//                cout << s << " - " << imDelta << " - " << exDelta << " - " << intDelta.row_sum(s) << " - " << intDelta.col_sum(s) << " - " 
+//                                << totDelta << " - " <<  S(s) << " - " << S(0) << endl;
             
                 
             }
         }
 
-        cout << "Outer Step: " << y+1 << endl; 
+//        cout << "Outer Step: " << y+1 << endl; 
         for(auto i=0u; i<S.rows(); ++i){
             N(i,y+1)=S(i);
-            cout << N(i,y+1) << endl;    
+//            cout << N(i,y+1) << endl;    
         }
     }
             
