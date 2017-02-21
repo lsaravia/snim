@@ -47,6 +47,10 @@ void SnimModel::SimulTauLeap(const SimulationParameters& sp, matrix<size_t>& N){
     // Setup random number generator with random seed
     // 
     auto rng = std::mt19937_64(sp.rndSeed);
+    if(sp.rndSeed==0) {
+        std::random_device rd{};
+        rng.seed(rd());
+    }
    
     // Number of steps for each model evaluation 
     auto nSteps = 1.0 / sp.tau;
@@ -56,7 +60,7 @@ void SnimModel::SimulTauLeap(const SimulationParameters& sp, matrix<size_t>& N){
     
     // Change in number of individuals for each event
     //
-    matrix<size_t> intDelta(nSpecies,nSpecies);
+    matrix<size_t> intDelta(nSpecies,nSpecies,0ul);
     
     // Vector with only the non-zero elements of the matrix
     //
@@ -77,34 +81,36 @@ void SnimModel::SimulTauLeap(const SimulationParameters& sp, matrix<size_t>& N){
     for (auto y = 0; y < (sp.nEvals) ; ++y){
 
         // Initialize the internal matrix with N
-        matrix <size_t> S(nSpecies,1);
+        matrix <long long int> S(nSpecies,1);
         for(auto i=0u; i<S.rows(); ++i)
             S(i)=N(i,y);
         
         for(auto n=0; n < nSteps; ++n) {
             
 //            cout << endl << "Inner Steps: " << n << endl;    
-            
+ 
             // Calculate interactions between species 
             //
             // Species 0 is the empty space
+            //
             for(auto t:actualInteractions){
                 auto s=t.first;
                 auto r=t.second;
-                double evRate =(omega(s,r)-omega(r,s))*S(s)*S(r)/communitySize; 
-                if( evRate>0 ){  
+                double evRate =(omega(s,r)-omega(r,s))*S(s)*S(r)/communitySize;
+                if( evRate > 0.0 ){  
                     auto pois = std::poisson_distribution<size_t>(evRate*sp.tau);
                     intDelta(s,r) = pois(rng);
                 }
                 else
                     intDelta(s,r) = 0.0;
                     
-//                cout << s << " - " << r << " - " << omega(s,r) << " - " << omega(r,s) << " - " << S(s) << " - " ;
+//                cout << s << " - " << r << " - " << omega(s,r) << " - " << omega(r,s) << " - " << S(s) << " - " << S(r) << endl;
 //                cout <<  evRate << " - "<< intDelta(s,r) << endl;
                 
             }
-//            cout << intDelta << endl;
+//            cout << "intDelta :" << intDelta << endl;
             
+            long long int sumDelta = 0;
             // Calculate inmigration extinction and sum interactions
             //            
             for(auto s=1; s<nSpecies; ++s){
@@ -113,7 +119,7 @@ void SnimModel::SimulTauLeap(const SimulationParameters& sp, matrix<size_t>& N){
                 double evRate = 0;
                 evRate = S(s)*e[s-1];
                 size_t exDelta = 0;
-                if(evRate > 0) {
+                if(evRate > 0.0) {
                     auto pois = std::poisson_distribution<size_t>(evRate*sp.tau);
                     exDelta= pois(rng);
                 }
@@ -121,27 +127,32 @@ void SnimModel::SimulTauLeap(const SimulationParameters& sp, matrix<size_t>& N){
                 // Calculate immigration 
                 evRate = S(0)*u[s-1];
                 size_t imDelta=0;
-                if( evRate > 0) {
+                if( evRate > 0.0) {
                     auto pois = std::poisson_distribution<size_t>(evRate*sp.tau);
                     imDelta= pois(rng);
                 }
                 // Calculate new population values
                 long long int totDelta = imDelta - exDelta + intDelta.row_sum(s) - intDelta.col_sum(s);
-                if( S(s)+totDelta >0)
+                if( S(s)+totDelta >0){
                     S(s) += totDelta;
+                }
                 else
                     S(s) =0;
                 
-                if( S(0) - totDelta <0)
-                    S(0) = 0;
-                else 
-                    S(0) -= totDelta;
-                        
+                sumDelta += totDelta;
+//                cout <<"S: "<< S << endl;        
 //                cout << s << " - " << imDelta << " - " << exDelta << " - " << intDelta.row_sum(s) << " - " << intDelta.col_sum(s) << " - " 
-//                                << totDelta << " - " <<  S(s) << " - " << S(0) << endl;
+//                                << totDelta << " - " << endl;
             
                 
             }
+            
+            if(S(0) - sumDelta < 0 )
+                S(0) = 0;
+            else
+                S(0)-=sumDelta;
+
+//            cout <<"S: "<< S << endl;        
         }
 
 //        cout << "Outer Step: " << y+1 << endl; 

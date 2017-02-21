@@ -55,7 +55,7 @@ class matrix {
     \brief Builds a 'rows' by 'cols' matrix filled with random entries between
            min and max.
    */
-  matrix(size_t rows, size_t cols, size_t seed, T min = T(0.0), T max = T(1.0))  // Disable for integers with enable_if.
+  matrix(size_t rows, size_t cols, size_t seed, T min, T max)  // Disable for integers with enable_if.
     : m_elems((T*)std::malloc(rows * cols * sizeof(T))), m_rows(rows), m_cols(cols) {
     auto rng = std::mt19937_64(seed);
     auto d = std::uniform_real_distribution<T>(min, max);
@@ -229,6 +229,13 @@ class matrix {
     return c;
   }
 
+  auto column(size_t col) const -> matrix {
+    assert(col < m_cols);
+    matrix<T> c(m_rows,1, col_cpy(col));
+    return c;
+  }
+
+  
   /**
     \brief Stores a copy of a given row in a pointer (must be large enough to
            contain all the elements of the row).
