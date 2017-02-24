@@ -314,7 +314,7 @@ class matrix {
 
   template<typename T_>
   friend auto operator<<(std::ostream&, matrix<T_> const&) -> std::ostream&;
-  
+
   template<typename T_>
   friend void col_cpy(size_t col, matrix<T_> const&, matrix<T_> & );
 

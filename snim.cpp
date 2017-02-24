@@ -14,10 +14,17 @@
  * limitations under the License.
  */
 
+#include <iterator>
 #include "snim.h"
+#include "configfile.h"
 
 namespace snim{ 
 
+/// Simulation of the model using the TauLeap method
+///
+/// \param sp = Parameters of the simulations
+/// \param N  = Output of the model
+    
 void SnimModel::SimulTauLeap(const SimulationParameters& sp, matrix<size_t>& N){
     using namespace std;
     // if output matrix undefined define it with the correct dimensions
@@ -27,23 +34,20 @@ void SnimModel::SimulTauLeap(const SimulationParameters& sp, matrix<size_t>& N){
         N.resize(omega.rows(),sp.nEvals+1);
     }
 
-//    if (() {
-//      std::ostringstream message;
-//      message << "Different time dimension of output matrix : "
-//              << "Expected " << sp.nEvals << ", "
-//              << "got " << N.cols() << endl;
-//
-//      throw std::invalid_argument(message.str());
-//    }
-    
     // Initialize output matrix with initial populations
     //
     N(0,0)=communitySize;
-    for( size_t i=1; i<N.rows(); ++i){
-        N(i,0)= nIni[i];
-        N(0,0)-=nIni[i];
+    if(sp.iniCond.size()==1)
+        for( size_t i=1; i<N.rows(); ++i){
+            N(i,0)= sp.iniCond[1];
+            N(0,0)-=sp.iniCond[1];
+        }
+    else {
+        for( size_t i=1; i<N.rows(); ++i){
+             N(i,0)= sp.iniCond[i];
+             N(0,0)-=sp.iniCond[i];
+        }
     }
-    
     // Setup random number generator with random seed
     // 
     auto rng = std::mt19937_64(sp.rndSeed);
@@ -164,38 +168,6 @@ void SnimModel::SimulTauLeap(const SimulationParameters& sp, matrix<size_t>& N){
             
 }
        
-
-std::string SnimModel::ReadSimulParams(const char *filename) {
-  std::ifstream in(filename, std::ios::in | std::ios::binary);
-  if (in)
-  {
-    std::string contents;
-    in.seekg(0, std::ios::end);
-    contents.resize(in.tellg());
-    in.seekg(0, std::ios::beg);
-    in.read(&contents[0], contents.size());
-    in.close();
-    return(contents);
-  }
-  throw(errno);
-}
-
-std::string SnimModel::ReadModelParams(const char *filename) {
-  std::ifstream in(filename, std::ios::in | std::ios::binary);
-  if (in)
-  {
-    std::string contents;
-    in.seekg(0, std::ios::end);
-    contents.resize(in.tellg());
-    in.seekg(0, std::ios::beg);
-    in.read(&contents[0], contents.size());
-    in.close();
-    return(contents);
-  }
-  throw(errno);
-}
-
-
 std::ostream& operator<<(std::ostream& os,  const SnimModel &  s) {
   os << "[Omega]\n" << s.omega << std::endl;
   
@@ -205,13 +177,124 @@ std::ostream& operator<<(std::ostream& os,  const SnimModel &  s) {
   os << "[Immigration]\n";
   os << s.u << std::endl;
 
-  os << "[Initial population]\n";
-  os << s.nIni << std::endl;
-  
   os << "[Total Size]\n[";
   os << s.communitySize << "]\n";
   
   return os;
+}
+
+/// Read simulation parameters from configuration file 
+///
+SimulationParameters::SimulationParameters(const std::string &fName){
+    
+    ConfigFile cfg(fName);
+    rndSeed = cfg.getValueOfKey<size_t>("rndSeed");
+    
+    nEvals  = cfg.getValueOfKey<size_t>("nEvals"); // number of evaluations steps
+    
+    tau     = cfg.getValueOfKey<double>("tau");
+    
+    if( cfg.keyExists("iniCond")){
+        auto iniCondStr = cfg.getValueOfKey<std::string>("iniCond");
+        std::istringstream strline(iniCondStr);
+        size_t tempd=0;
+        while (strline >> tempd)    // Will read up to eof()
+                iniCond.push_back(tempd);
+     
+      
+    }
+
+} 
+
+/// Read model parameters from file 
+///
+/// File structure by line:
+///
+/// NumberOfSpecies CommunitySize
+/// <inmigration rates> Vector of NumberOfSpecies 
+/// <Extinction rates> Vector of NumberOfSpecies 
+/// <Interaction matrix> Matrix of NumberOfSpecies+1 by NumberOfSpecies+1  
+///
+void SnimModel::ReadModelParams(const std::string &fName) {
+    ConfigFile cfg;
+    
+    std::ifstream file;
+    file.open(fName.c_str());
+    if (!file)
+            exitWithError("Model Parameters File [" + fName + "] couldn't be found!\n");
+
+    std::string line;
+    size_t lineNo = 0;
+    while (std::getline(file, line)) {
+        std::string temp = line;
+
+        if (temp.empty())
+                continue;
+
+        cfg.removeComment(temp);
+        if (cfg.onlyWhitespace(temp))
+                continue;
+        lineNo++;
+
+        ReadModelParamsLine(temp, lineNo);
+    }
+
+}
+
+void SnimModel::ReadModelParamsLine(const std::string& line, const size_t lineNo){
+    using namespace std;
+    istringstream strline(line);
+    double tempd=0;
+    switch(lineNo){
+        case 1:
+            strline >> nSpecies;
+            strline >> communitySize;
+            break;
+            
+        case 2:                         // Read immigration vector
+            u.reserve(nSpecies);
+            while (strline >> tempd) // Will read up to eof()
+                u.push_back(tempd);
+            if (u.size() != nSpecies) {
+                std::ostringstream message;
+                message << "Wrong length of Immigration vector: "
+                        << "expected " << nSpecies << ", "
+                        << "got " << u.size() << ".";
+
+                throw std::invalid_argument(message.str());
+            }
+            break;
+            
+        case 3:                         // Read extinction vector
+            e.reserve(nSpecies);
+            while (strline >> tempd)    // Will read up to eof()
+                e.push_back(tempd);
+            
+            if (e.size() != nSpecies) {
+                std::ostringstream message;
+                message << "Wrong length of Extinction vector: "
+                        << "expected " << nSpecies << ", "
+                        << "got " << e.size() << ".";
+
+                throw std::invalid_argument(message.str());
+            }
+
+            break;
+            
+       default:                        // Read a line of the interaction matrix omega 
+           if(omega.size()!= (nSpecies+1)*(nSpecies+1) )
+           {
+               omega.resize(nSpecies+1,nSpecies+1);
+           }
+
+           auto row=lineNo-4; 
+           if(row < omega.rows())
+              for( auto i=0u; i<omega.cols(); ++i ){
+                strline >> tempd;
+                if(strline.eof()) break; 
+                omega(row,i)= tempd;
+              } 
+    }
 }
 
 } // end namespace

@@ -189,7 +189,7 @@ TEST(snimTauLeap, Initial1000_Im0_Ext121_Prey2_win){
     mdl.SetOmega( {0.0, 0.0, 0.0, 0.0,
                 0.0, 0.0, 3.0, 2.0,
                 4.0, 0.0, 0.0, 0.0,
-                2.0, 0.0, 0.0, 0.0} );
+                 2.0, 0.0, 0.0, 0.0} );
     mdl.SetExtinction({1.0,2.0,1.0});
     mdl.SetInmigration({0.0,0.0,0.0});
     mdl.SetInitialN({200,400,400});        

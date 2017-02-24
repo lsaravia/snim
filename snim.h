@@ -52,9 +52,14 @@ typename std::enable_if<!std::numeric_limits<T>::is_integer, bool>::type
 struct SimulationParameters {
     size_t rndSeed=0;               // Seed of the random generator
     size_t nEvals=0;                // number of evaluations steps
-    double tau=0;                   // Tau method steps  
-    // size_t nSteps = nEvals*tau;     // total number of steps
+    double tau=0.0;                   // Tau method steps  
+    std::vector<size_t> iniCond;                 // Initial conditions 
 
+    // size_t nSteps = nEvals*tau;     // total number of steps
+    
+    // Read simulations parameters from configuration file
+    SimulationParameters(const std::string &fName); 
+    SimulationParameters(): rndSeed(0),nEvals(0),tau(0.0), iniCond(){};
 };
 
 class SnimModel {
@@ -64,19 +69,23 @@ class SnimModel {
     
     matrix <float> omega;       // Interaction matrix
     std::vector<float> e;       // extinction vector
-    std::vector<float> u;       // inmigration parameter 
-    std::vector<float> nIni;       // Initial Population values
-    const size_t communitySize=0;           // Total size of the community
+    std::vector<float> u;       // immigration parameter 
+    size_t communitySize=0;           // Total size of the community
+    size_t nSpecies=0;                 // Number of species
+    
 
     // Simulation Parameters 
     SimulationParameters simPar;
 
+    void ReadModelParamsLine(const std::string &line, size_t const lineNo);
+
     
 public:
+  SnimModel() : omega(), e(),u(), communitySize(0), nSpecies(0) {}
 
-  SnimModel(size_t nsp, size_t comSize) : omega(nsp+1,nsp+1), e(nsp),u(nsp), nIni(nsp+1), communitySize(comSize) {}
+  SnimModel(size_t nsp, size_t comSize) : omega(nsp+1,nsp+1), e(nsp),u(nsp), communitySize(comSize), nSpecies(nsp) {}
   
-  SnimModel(const SnimModel& s) : omega(s.omega), e(s.e),u(s.u), nIni(s.nIni), simPar(s.simPar), communitySize(s.communitySize) {}
+  SnimModel(const SnimModel& s) : omega(s.omega), e(s.e),u(s.u), simPar(s.simPar), communitySize(s.communitySize), nSpecies(s.nSpecies) {}
 
   SnimModel& operator=(const SnimModel& s){
     if(this == &s )
@@ -85,8 +94,8 @@ public:
     omega = s.omega;
     e = s.e;
     u = s.u;
-    nIni = s.nIni;
     simPar = s.simPar;
+    nSpecies = s.nSpecies;
     return *this;
   }
   
@@ -134,15 +143,14 @@ public:
   /**
   \brief Set Initial value of species' populations  
   */
-  void SetInitialN(std::initializer_list<float> const& om ){
-    using namespace std;
-    assert((nIni.size()-1)==om.size());
-    copy(begin(om),end(om),begin(nIni)+1);
-  };
+//  void SetInitialN(std::initializer_list<float> const& om ){
+//    using namespace std;
+//    assert((nIni.size()-1)==om.size());
+//    copy(begin(om),end(om),begin(nIni)+1);
+//  };
   
  
-  std::string ReadSimulParams(const char *filename);
-  std::string ReadModelParams(const char *filename);
+  void  ReadModelParams(const std::string &fName);
 
   /**
   \brief Simulate the model using the Tau-leap method   

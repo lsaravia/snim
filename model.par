@@ -1,0 +1,14 @@
+# Model parameters example 
+#
+3 10000
+0.1 	0.1 	0.1
+1 		1 		1
+# Omega interaction matriz 
+# Species 0 is empty space
+# Species 1 Predator eats 2 and 3
+# Species 2 has higher growth rate 
+# Species 3 outcompete species 2 
+0.0 0.0 0.0 0.0
+0.0 0.0 3.0 2.0
+4.0 0.0 0.0 0.0
+2.0 0.0 0.5 0.0
