@@ -283,3 +283,35 @@ TEST(snimTauLeap, Initial4000_Im0_Ext11_PredDie_Prey05){
     EXPECT_NEAR(out(2,100),5000,100);
        
 }
+
+
+TEST(snimTauLeap, Initial4000_Im001_Ext11_Pred300_Prey4000){
+     using namespace snim;
+
+    
+    std::cout << "2 species 1 Predator 1 prey" << std::endl;
+    std::cout << "Predator don't survive if inmigrations 0, preys grow at extinction/growth=2 density of preys less than 0.5" << std::endl;
+    SnimModel mdl(2,10000);
+    mdl.SetOmega( {0.0, 0.0, 0.0,
+                   0.0, 0.0, 2.0,
+                   2.0, 0.0, 0.0} 
+    );
+    mdl.SetExtinction({1.0,1.0});
+    mdl.SetInmigration({0.01,0.0});
+
+    std::cout << mdl << std::endl;
+
+    SimulationParameters sp = {1234,100,0.01,
+                                            4000};
+    std::cout << sp << std::endl;
+
+    matrix <size_t> out;
+    mdl.SimulTauLeap(sp,out);
+
+    std::cout << out << std::endl; 
+
+    EXPECT_NEAR(out(0,100),5000,500);
+    EXPECT_NEAR(out(1,100),300,100);
+    EXPECT_NEAR(out(2,100),4000,500);
+       
+}
