@@ -1,8 +1,8 @@
 # Model parameters example 
 #
-3 10000
-0.1 	0.1 	0.1
-1 		1 		1
+3 10000                  # 3 species, total habitat 10000
+0.1 	0.1 	0.1      # Immigration vector
+1 		1 		1        # Extinction vector
 # Omega interaction matriz 
 # Species 0 is empty space
 # Species 1 Predator eats 2 and 3

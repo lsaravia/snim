@@ -15,7 +15,7 @@
 namespace snim {
 
 /**
-  \brief A simple column-major matrix of floating point numbers.
+  \brief A simple column-major matrix of numeric types.
  */
 template<typename T >
 class matrix {
@@ -220,7 +220,7 @@ class matrix {
   }
 
   /**
-    \brief Creates a copy of a column.
+    \brief Creates a copy of a column and returns a pointer to T.
    */
   auto col_cpy(size_t col) const -> T* {
     assert(col < m_cols);
@@ -229,6 +229,8 @@ class matrix {
     return c;
   }
 
+  /// Returns a copy of a column in a new matrix object
+  ///
   auto column(size_t col) const -> matrix {
     assert(col < m_cols);
     matrix<T> c(m_rows,1, col_cpy(col));
@@ -266,6 +268,20 @@ class matrix {
        s += m_elems[i * m_rows + row];
     return s;
   }
+  
+    ///
+    ///    Average of a row of the matrix with inclusive limits.
+    ///
+  auto row_mean(size_t row, size_t from, size_t to) const -> double {
+    assert(row < m_rows);
+    assert(from < m_cols && to < m_cols);
+    to++;
+    T s=0;
+    for (auto i = from; i < to; ++i)
+       s += m_elems[i * m_rows + row];
+
+    return static_cast<double>(s/(to-from));
+  }
 
   /**
     \brief Sum of a column.
@@ -278,8 +294,8 @@ class matrix {
       s += m_elems[col * m_rows + i];
     return s;
   }
-  
-  /**
+
+   /**
     \brief Get element using the index of the flat column-major internal array.
    */
   auto operator[](size_t idx) const -> T& {

@@ -31,11 +31,13 @@ TEST(snimTauLeap, Initial0_Final0){
                    0.1, 0.0, 0.2, 0.0} );
     mdl.SetExtinction({0.5,0.5,0.5});
     mdl.SetInmigration({0.0,0.0,0.0});
-    mdl.SetInitialN({0,0,0});      
     
     std::cout << mdl << std::endl;
     
-    SimulationParameters sp = {1234,1,0.01};
+    SimulationParameters sp {1234,1,0.01,
+                                    0,0,0};
+    std::cout << sp << std::endl;
+
     matrix <size_t> out;
     mdl.SimulTauLeap(sp,out);
     EXPECT_EQ(10000,out(0,1));
@@ -60,12 +62,14 @@ TEST(snimTauLeap, Initial100_Im0_Out0){
                    0.1, 0.0, 0.2, 0.0} );
     mdl.SetExtinction({2,0.5,0.5});
     mdl.SetInmigration({0.0,0.0,0.0});
-    mdl.SetInitialN({1000,0,0});        
 
     std::cout << mdl << std::endl;
 
 
-    SimulationParameters sp = {1234,5,0.01};
+    SimulationParameters sp = {1234,5,0.01,
+                                    1000,0,0};
+    std::cout << sp << std::endl;
+    
     matrix <size_t> out;
     mdl.SimulTauLeap(sp,out);
 
@@ -94,11 +98,12 @@ TEST(snimTauLeap, Initial10000_Im0_Ext0_Prey2_0){
                    1.7, 0.0, 0.0, 0.0} );
     mdl.SetExtinction({0.0,0,0.0});
     mdl.SetInmigration({0.0,0.0,0.0});
-    mdl.SetInitialN({2000,4000,4000});        
 
     std::cout << mdl << std::endl;
 
-    SimulationParameters sp = {1234,100,0.01};
+    SimulationParameters sp = {1234,100,0.01,
+                                    2000,4000,4000};
+    std::cout << sp << std::endl;
 
     matrix <size_t> out;
     mdl.SimulTauLeap(sp,out);
@@ -127,11 +132,12 @@ TEST(snimTauLeap, Initial10000_Im0_Ext0_AllPrey_0){
                    1.7, 0.0, 0.0, 0.0} );
     mdl.SetExtinction({0.0,0,0.0});
     mdl.SetInmigration({0.0,0.0,0.0});
-    mdl.SetInitialN({2000,4000,4000});        
 
     std::cout << mdl << std::endl;
 
-    SimulationParameters sp = {1234,100,0.01};
+    SimulationParameters sp = {1234,100,0.01,
+                                            2000,4000,4000};
+    std::cout << sp << std::endl;
 
     matrix <size_t> out;
     mdl.SimulTauLeap(sp,out);
@@ -161,11 +167,12 @@ TEST(snimTauLeap, Initial10000_Im0_Ext0_Prey2_win){
                    2.0, 0.0, 0.2, 0.0} );
     mdl.SetExtinction({1.0,0,0.0});
     mdl.SetInmigration({0.0,0.0,0.0});
-    mdl.SetInitialN({2000,4000,4000});        
 
     std::cout << mdl << std::endl;
 
-    SimulationParameters sp = {1234,100,0.01};
+    SimulationParameters sp = {1234,100,0.01,
+                                            2000,4000,4000};
+    std::cout << sp << std::endl;
 
     matrix <size_t> out;
     mdl.SimulTauLeap(sp,out);
@@ -192,12 +199,12 @@ TEST(snimTauLeap, Initial1000_Im0_Ext121_Prey2_win){
                  2.0, 0.0, 0.0, 0.0} );
     mdl.SetExtinction({1.0,2.0,1.0});
     mdl.SetInmigration({0.0,0.0,0.0});
-    mdl.SetInitialN({200,400,400});        
-
 
     std::cout << mdl << std::endl;
 
-    SimulationParameters sp = {1234,100,0.01};
+    SimulationParameters sp = {1234,100,0.01,
+                                            200,400,400};
+    std::cout << sp << std::endl;
 
     matrix <size_t> out;
     mdl.SimulTauLeap(sp,out);
@@ -208,5 +215,71 @@ TEST(snimTauLeap, Initial1000_Im0_Ext121_Prey2_win){
     EXPECT_GT(out(1,100),0);
     EXPECT_GT(out(2,100),0);
     EXPECT_EQ(out(3,100),0);
+       
+}
+
+
+TEST(snimTauLeap, Initial10000_Im0_Ext111_AllDie){
+     using namespace snim;
+
+    
+    std::cout << "3 species 1 Predator 2 prey" << std::endl;
+    std::cout << "Predator eats preys but preys don't growth everybody die" << std::endl;
+    SnimModel mdl(3,10000);
+    mdl.SetOmega( {0.0, 0.0, 0.0, 0.0,
+                   0.0, 0.0, 3.0, 2.0,
+                   0.0, 0.0, 0.0, 0.0,
+                   0.0, 0.0, 0.0, 0.0} 
+    );
+    mdl.SetExtinction({1.0,1.0,1.0});
+    mdl.SetInmigration({0.0,0.0,0.0});
+
+    std::cout << mdl << std::endl;
+
+    SimulationParameters sp = {1234,100,0.01,
+                                            2000,4000,4000};
+    std::cout << sp << std::endl;
+
+    matrix <size_t> out;
+    mdl.SimulTauLeap(sp,out);
+
+    std::cout << out << std::endl; 
+
+    EXPECT_EQ(out(0,100),10000);
+    EXPECT_EQ(out(1,100),0);
+    EXPECT_EQ(out(2,100),0);
+    EXPECT_EQ(out(3,100),0);
+       
+}
+
+
+TEST(snimTauLeap, Initial4000_Im0_Ext11_PredDie_Prey05){
+     using namespace snim;
+
+    
+    std::cout << "2 species 1 Predator 1 prey" << std::endl;
+    std::cout << "Predator don't eats preys die, preys grow at extinction/growth=2 density of preys=0.5" << std::endl;
+    SnimModel mdl(2,10000);
+    mdl.SetOmega( {0.0, 0.0, 0.0,
+                   0.0, 0.0, 0.0,
+                   2.0, 0.0, 0.0} 
+    );
+    mdl.SetExtinction({1.0,1.0});
+    mdl.SetInmigration({0.0,0.0});
+
+    std::cout << mdl << std::endl;
+
+    SimulationParameters sp = {1234,100,0.01,
+                                            4000};
+    std::cout << sp << std::endl;
+
+    matrix <size_t> out;
+    mdl.SimulTauLeap(sp,out);
+
+    std::cout << out << std::endl; 
+
+    EXPECT_NEAR(out(0,100),5000,100);
+    EXPECT_EQ(out(1,100),0);
+    EXPECT_NEAR(out(2,100),5000,100);
        
 }

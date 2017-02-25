@@ -39,13 +39,22 @@ void SnimModel::SimulTauLeap(const SimulationParameters& sp, matrix<size_t>& N){
     N(0,0)=communitySize;
     if(sp.iniCond.size()==1)
         for( size_t i=1; i<N.rows(); ++i){
-            N(i,0)= sp.iniCond[1];
-            N(0,0)-=sp.iniCond[1];
+            N(i,0)= sp.iniCond[0];
+            N(0,0)-=sp.iniCond[0];
         }
     else {
+        if ((sp.iniCond.size()+1) != omega.rows()) {
+            std::ostringstream message;
+            message << "Different no. of species in Initial conditions: "
+                    << "expected " << omega.rows()-1 << ", "
+                    << "got " << sp.iniCond.size() << ".";
+
+            throw std::invalid_argument(message.str());
+        }
+
         for( size_t i=1; i<N.rows(); ++i){
-             N(i,0)= sp.iniCond[i];
-             N(0,0)-=sp.iniCond[i];
+             N(i,0)= sp.iniCond[i-1];
+             N(0,0)-=sp.iniCond[i-1];
         }
     }
     // Setup random number generator with random seed
@@ -101,6 +110,10 @@ void SnimModel::SimulTauLeap(const SimulationParameters& sp, matrix<size_t>& N){
                 auto s=t.first;
                 auto r=t.second;
                 double evRate =(omega(s,r)-omega(r,s))*S(s)*S(r)/communitySize;
+
+//                cout << s << " - " << r << " - " << omega(s,r) << " - " << omega(r,s) << " - " << S(s) << " - " << S(r) << endl;
+//                cout <<  evRate << " - "<< intDelta(s,r) << endl;
+
                 if( evRate > 0.0 ){  
                     auto pois = std::poisson_distribution<size_t>(evRate*sp.tau);
                     intDelta(s,r) = pois(rng);
@@ -108,8 +121,6 @@ void SnimModel::SimulTauLeap(const SimulationParameters& sp, matrix<size_t>& N){
                 else
                     intDelta(s,r) = 0.0;
                     
-//                cout << s << " - " << r << " - " << omega(s,r) << " - " << omega(r,s) << " - " << S(s) << " - " << S(r) << endl;
-//                cout <<  evRate << " - "<< intDelta(s,r) << endl;
                 
             }
 //            cout << "intDelta :" << intDelta << endl;
@@ -177,8 +188,21 @@ std::ostream& operator<<(std::ostream& os,  const SnimModel &  s) {
   os << "[Immigration]\n";
   os << s.u << std::endl;
 
-  os << "[Total Size]\n[";
+  os << "[Number of Species, Total Size]\n[";
+  
+  os << s.nSpecies << ", ";
   os << s.communitySize << "]\n";
+  
+  return os;
+}
+
+
+std::ostream& operator<<(std::ostream& os,  const SimulationParameters&  s) {
+    
+  os << "[Number of Evaluations, Random Seed, Tau]\n[" << s.nEvals << ", " << s.rndSeed << ", " 
+          << s.tau << "]\n" << std::endl;
+  
+  os << "[Initial populations]\n" << s.iniCond << std::endl;
   
   return os;
 }
@@ -241,6 +265,11 @@ void SnimModel::ReadModelParams(const std::string &fName) {
 
 }
 
+/// Auxiliary function of ReadModelParams extract values from lines
+///
+/// \param line String with the line to be extracted
+/// \param lineNo Number of the line with information comments lines are skipped
+///
 void SnimModel::ReadModelParamsLine(const std::string& line, const size_t lineNo){
     using namespace std;
     istringstream strline(line);
@@ -291,8 +320,8 @@ void SnimModel::ReadModelParamsLine(const std::string& line, const size_t lineNo
            if(row < omega.rows())
               for( auto i=0u; i<omega.cols(); ++i ){
                 strline >> tempd;
-                if(strline.eof()) break; 
                 omega(row,i)= tempd;
+                if(strline.eof()) break; 
               } 
     }
 }

@@ -50,16 +50,29 @@ typename std::enable_if<!std::numeric_limits<T>::is_integer, bool>::type
     
     
 struct SimulationParameters {
-    size_t rndSeed=0;               // Seed of the random generator
-    size_t nEvals=0;                // number of evaluations steps
-    double tau=0.0;                   // Tau method steps  
-    std::vector<size_t> iniCond;                 // Initial conditions 
+    size_t rndSeed=0;                   /// Seed of the random generator
+    size_t nEvals=0;                    /// number of evaluations steps
+    double tau=0.0;                     /// Tau method steps  
+    std::vector<size_t> iniCond;        /// Initial conditions 
 
-    // size_t nSteps = nEvals*tau;     // total number of steps
     
-    // Read simulations parameters from configuration file
+    /// Read simulations parameters from configuration file
+    ///
     SimulationParameters(const std::string &fName); 
+    
     SimulationParameters(): rndSeed(0),nEvals(0),tau(0.0), iniCond(){};
+    
+    SimulationParameters(std::initializer_list<float> const& s){
+        auto it=begin(s); 
+
+        rndSeed = *it++;
+        nEvals  = *it++;
+        tau     = *it++;
+        std::copy(s.begin()+3, s.end(),std::back_inserter(iniCond));       
+    };
+
+    friend std::ostream& operator<<(std::ostream&,  const SimulationParameters&);
+
 };
 
 class SnimModel {
@@ -74,18 +87,15 @@ class SnimModel {
     size_t nSpecies=0;                 // Number of species
     
 
-    // Simulation Parameters 
-    SimulationParameters simPar;
-
     void ReadModelParamsLine(const std::string &line, size_t const lineNo);
 
     
 public:
-  SnimModel() : omega(), e(),u(), communitySize(0), nSpecies(0) {}
+  SnimModel() : omega(), e(),u(), communitySize(0), nSpecies(0){}
 
-  SnimModel(size_t nsp, size_t comSize) : omega(nsp+1,nsp+1), e(nsp),u(nsp), communitySize(comSize), nSpecies(nsp) {}
+  SnimModel(size_t nsp, size_t comSize) : omega(nsp+1,nsp+1), e(nsp),u(nsp), communitySize(comSize), nSpecies(nsp){}
   
-  SnimModel(const SnimModel& s) : omega(s.omega), e(s.e),u(s.u), simPar(s.simPar), communitySize(s.communitySize), nSpecies(s.nSpecies) {}
+  SnimModel(const SnimModel& s) : omega(s.omega), e(s.e),u(s.u), communitySize(s.communitySize), nSpecies(s.nSpecies) {}
 
   SnimModel& operator=(const SnimModel& s){
     if(this == &s )
@@ -94,7 +104,6 @@ public:
     omega = s.omega;
     e = s.e;
     u = s.u;
-    simPar = s.simPar;
     nSpecies = s.nSpecies;
     return *this;
   }

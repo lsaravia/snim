@@ -19,15 +19,20 @@ int main(int argc, char* argv[]){
         return 1;
     }
     
+    SnimModel mdl;
+    mdl.ReadModelParams(argv[2]);
+
     // Read simulation parameters from file
     //
     SimulationParameters sp(argv[1]);
-        
-    SnimModel mdl;
-    mdl.ReadModelParams("model.par");
-  
+
     cout << mdl << endl;
+    cout << sp << endl;
     
+    matrix <size_t> out;
+    mdl.SimulTauLeap(sp,out);
+
+    cout << out << endl;
 
   return 0;
 }
