@@ -5,7 +5,8 @@
 
 static void show_usage(std::string name)
 {
-    std::cerr << "Usage: " << name << " SimulationParameterFile ModelParameterFile\n"
+    std::cerr << "\nSNIM Stochactic Network Interaction Model\n\n " 
+              << "Usage: " << name << " SimulationParameterFile ModelParameterFile [OutputFileName]\n"
               << std::endl;
 }
 
@@ -32,7 +33,12 @@ int main(int argc, char* argv[]){
     matrix <size_t> out;
     mdl.SimulTauLeap(sp,out);
 
-    cout << out << endl;
-
+    if( argc<3) 
+        cout << out << endl;
+    else {
+        ofstream fout(argv[3]);
+        fout << out; 
+    }
+    
   return 0;
 }

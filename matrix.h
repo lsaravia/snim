@@ -332,6 +332,9 @@ class matrix {
   friend auto operator<<(std::ostream&, matrix<T_> const&) -> std::ostream&;
 
   template<typename T_>
+  friend auto operator<<(std::ofstream&, matrix<T_> const&) -> std::ofstream&;
+
+  template<typename T_>
   friend void col_cpy(size_t col, matrix<T_> const&, matrix<T_> & );
 
 };
@@ -385,6 +388,19 @@ auto operator<<(std::ostream& os, matrix<T> const& m) -> std::ostream& {
   }
   return os;
 }
+
+template<typename T>
+auto operator<<(std::ofstream& os, matrix<T> const& m) -> std::ofstream& {
+  for (auto r = 0u; r < m.m_rows; ++r) {
+    os << m(r, 0);
+    for (auto c = 1u; c < m.m_cols; ++c) {
+      os << "\t" << m(r, c);
+    }
+    os << "\n";
+  }
+  return os;
+}
+
 
 } /* end namespace */
 
