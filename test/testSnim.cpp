@@ -290,7 +290,7 @@ TEST(snimTauLeap, Initial4000_Im001_Ext11_Pred300_Prey4000){
 
     
     std::cout << "2 species 1 Predator 1 prey" << std::endl;
-    std::cout << "Predator don't survive if inmigrations 0, preys grow at extinction/growth=2 density of preys less than 0.5" << std::endl;
+    std::cout << "Predator don't survive if immigrations 0, preys grow at extinction/growth=2 density of preys less than 0.5" << std::endl;
     SnimModel mdl(2,10000);
     mdl.SetOmega( {0.0, 0.0, 0.0,
                    0.0, 0.0, 2.0,
