@@ -3,6 +3,9 @@ project (snim C CXX)
 
 find_package(Math)
 
+
+option(LINK_STATIC_LIBS "Link with static libraries" OFF)
+
 # C++ flags
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
@@ -24,6 +27,12 @@ include_directories(.)
 set(SOURCES mainSnim.cpp
 	snim.cpp 
 )
+
+if (LINK_STATIC_LIBS)
+	SET(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
+	SET(BUILD_SHARED_LIBRARIES OFF)
+	SET(CMAKE_EXE_LINKER_FLAGS "-static")
+endif ()
 
 add_executable(snim ${SOURCES})
 

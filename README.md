@@ -5,6 +5,19 @@ This C++11 class simulates the general model defined in:
 
 1. Sole, R. V, Alonso, D. & Mckane, A. (2002). Self-organized instability in complex ecosystems. Philos. Trans. R. Soc. Lond. B. Biol. Sci., 357, 667–681
 
+## Building using cmake
+
+To build using cmake you should create a folder bin and run
+
+   cmake .. -DCMAKE_BUILD_TYPE=Release
+   make
+
+It could be usefull in windows systems to compile with static libraries
+   
+   cmake .. -DLINK_STATIC_LIBS=ON
+   mingw32-make
+   
+s   
 ## License
 
 The code is released under the liberal
