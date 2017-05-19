@@ -14,10 +14,10 @@ To build using cmake you should create a folder bin and run
    make
 ```
 
-It could be usefull in windows systems to compile with static libraries
+It could be usefull in windows systems to compile with static libraries and MinGW compiler
    
 ```
-   cmake .. -DLINK_STATIC_LIBS=ON
+   cmake .. -G "MinGW Makefiles" -DLINK_STATIC_LIBS=ON 
    mingw32-make
 ```
    
