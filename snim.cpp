@@ -73,7 +73,7 @@ void SnimModel::SimulTauLeap(const SimulationParameters& sp, matrix<size_t>& N){
     
     // Change in number of individuals for each event
     //
-    matrix<size_t> intDelta(nSpecies,nSpecies,0u);
+    matrix<size_t> intDelta(nSpecies,nSpecies,0.0);
     
     // Vector with only the non-zero elements of the matrix
     //

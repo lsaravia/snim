@@ -27,14 +27,15 @@ int main(int argc, char* argv[]){
     //
     SimulationParameters sp(argv[1]);
 
-    cout << mdl << endl;
-    cout << sp << endl;
-    
+  
     matrix <size_t> out;
     mdl.SimulTauLeap(sp,out);
 
-    if( argc<3) 
+    if( argc<3) {
+        cout << mdl << endl;
+        cout << sp << endl;
         cout << out << endl;
+    }
     else {
         ofstream fout(argv[3]);
         fout << out; 
